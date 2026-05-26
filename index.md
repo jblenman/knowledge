@@ -10,6 +10,7 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 |------|--------|
 | [languages/python.md](languages/python.md) | Python 3.8 vs 3.9+ compatibility, Windows CP1252 gotchas, subprocess encoding |
 | [languages/python-from-csharp.md](languages/python-from-csharp.md) | Python idioms with C# / .NET analogues — translation guide for modules, language constructs, collections, paths, time |
+| [languages/csharp-dotnet.md](languages/csharp-dotnet.md) | Async/parallel — sequential await vs `Task.WhenAll` vs true parallelism; cursor-based paging helper; `HttpClient` with conditional proxy |
 | [languages/javascript.md](languages/javascript.md) | *(placeholder — to grow as patterns come up)* |
 | [languages/swift-ios.md](languages/swift-ios.md) | *(placeholder — to grow as patterns come up)* |
 
@@ -28,6 +29,7 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 | File | Topics |
 |------|--------|
 | [tools/codex-agents-template.md](tools/codex-agents-template.md) | Reusable AGENTS.md template for Codex CLI — reasoning, workflow, communication, git safety, code quality |
+| [tools/goose.md](tools/goose.md) | Goose AI agent config — locations, format, env var precedence, remote Ollama setup, tool shim for weak tool-calling models |
 
 ## See also
 
