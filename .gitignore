@@ -1,0 +1,13 @@
+# Local index built by local-rag (don't commit indexed databases)
+.index/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
