@@ -23,6 +23,9 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 | [patterns/sql-server-encryption.md](patterns/sql-server-encryption.md) | Column-level (symmetric + cert), Always Encrypted, application-layer, TDE — what each protects against; `EncryptByKey` output structure; authenticator parameter; ciphertext detection |
 | [patterns/sql-server-views.md](patterns/sql-server-views.md) | T-SQL view semantics, predicate pushdown, what `WITH SCHEMABINDING` actually does (and doesn't), indexed views, lookup-table pattern for UI dropdowns |
 | [patterns/windows-admin.md](patterns/windows-admin.md) | Detached background processes, killing elevated processes, PowerShell auto-transcripts, Google Drive `.symlink` false positives, Git Bash on Windows quirks |
+| [patterns/chrome-extension-spa-leaks.md](patterns/chrome-extension-spa-leaks.md) | Dark Reader memory leak on Material/Angular SPAs: heap-snapshot signature, two-path source-code root cause (`StyleManager.destroy` cleanup gap + `imageSelectorQueue` async Promise retention), sanitization before sharing, filed upstream as `darkreader/darkreader#14164` |
+| [patterns/heap-snapshot-streaming-analysis.md](patterns/heap-snapshot-streaming-analysis.md) | Streaming Chrome heap-snapshot analysis for multi-GB captures that DevTools can't reload: `ijson` + pre-allocated `array.array`, two-pass strings + nodes, ~300 MB peak memory, sanitization technique; public gist with the scripts |
+| [patterns/oss-maintainer-bug-reports.md](patterns/oss-maintainer-bug-reports.md) | Writing upstream bug reports that land: addressing prior pushback, crediting other reporters, evidence-before-conclusion framing, leading suggested fixes with the codebase's existing patterns, conditional PR offers, honest AI-assistance acknowledgment, not pre-judging maintainer's costs |
 
 ## Tools
 
