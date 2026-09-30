@@ -34,6 +34,7 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 |------|--------|
 | [tools/codex-agents-template.md](tools/codex-agents-template.md) | Reusable AGENTS.md template for Codex CLI — reasoning, workflow, communication, git safety, code quality |
 | [tools/goose.md](tools/goose.md) | Goose AI agent config — locations, format, env var precedence, remote Ollama setup, tool shim for weak tool-calling models |
+| [tools/claude-code-action-guard.md](tools/claude-code-action-guard.md) | Template: a Claude Code `PreToolUse` hook that refuses or asks about actions against one web application — hook contract (stdin JSON, deny/ask JSON out, fail open), a shell reader for curl/wget/httpie/PowerShell request methods, path rules, Claude in Chrome tab memory, MCP tool rules; full source, installer and 22 tests in code blocks with setup and adaptation notes |
 
 ## See also
 

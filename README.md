@@ -31,7 +31,7 @@ The two repos are independent — you can use this corpus with any RAG/search to
 
 - **`languages/`** — Per-language notes: gotchas, idioms, version compatibility. Two stubs (`javascript.md`, `swift-ios.md`) are placeholders waiting for content.
 - **`patterns/`** — Reusable design patterns and reference material: SQL Server encryption, view semantics, data-security architecture, LLM prompting philosophy, Windows admin idioms.
-- **`tools/`** — Configurations, templates, and reference material for specific tools. Currently just an AGENTS.md template for Codex CLI; more to come.
+- **`tools/`** — Configurations, templates, and reference material for specific tools: an AGENTS.md template for Codex CLI, Goose configuration, and a Claude Code hook template that keeps an agent from changing a web application.
 
 ## Contributing back to your own version
 
