@@ -1,223 +1,269 @@
-# A team knowledge base for Claude Code, with workflow cards for QA
+# A knowledge base for Claude Code on your own machine
 
-*Template package, 1 October 2026. Everything is in this one document: the files of the repository in code blocks, a snippet that unpacks them, and the steps to set up, install and check it. The only code is one PowerShell script that validates content; it needs no packages and makes no network calls.*
+*1 October 2026. One document: what it is, the steps a Claude Code session follows to set it up for you, a reference, and the 19 files it installs. It needs no git repository and no packages, and the setup uses no network. The version for a team that shares one through a git repository is the companion document, `claude-code-team-knowledge-base.md`.*
 
-*Starting alone, without a repository? Use the companion document, `claude-code-knowledge-base-local.md`: the same files for one person on one machine, set up by a Claude Code session in a few minutes. A local copy moves into a shared repository later without loss; see "Coming from a local copy" below.*
+> **If you are a Claude Code session that was asked to set this up:** follow "Part 2 - Setup by a Claude session". You need this document only up to line 343, where Part 4 begins. Part 4 holds the files; the setup script reads them, so you do not have to.
 
-## The problem it solves
+## Part 1 - What this is
 
-A Claude Code session starts with no knowledge of your application. Asked to test a feature, it works out again how to sign in, where the search is, which account to use and what the date format is. The next session does the same. A team knowledge base is a git repository of short, reviewed notes that every developer's sessions load when they start, read before they explore, and add to when they learn something.
+A Claude Code session starts with no knowledge of your application. Asked to test a feature, it works out again how to sign in, where the search is, which account to use and what the date format is. The next session does the same. A knowledge base is a folder of short notes that every session loads when it starts, reads before it explores, and adds to when it learns something.
 
-This one is built around QA. The common workflows of the application (sign in, quick search, advanced search and the rest) are written as **cards** that a session can run as written, and a `qa` skill uses them for ad-hoc testing.
+This one is built around testing. The common workflows of the application (sign in, quick search, advanced search and the rest) are written as **cards** that a session runs as written instead of rediscovering them.
 
-## What you get
+What gets installed:
 
-| Part | What it does |
+| What | Where (when you choose "this project only") | For |
+|---|---|---|
+| The notes | `app-kb/` in the project folder | The index, the workflow cards, how testing is done here, environments and accounts, test data, gotchas |
+| A rule file, two lines | `.claude/rules/app-kb.md` | A rule file is a small instruction file that Claude Code reads when a session starts. This one makes every session in the project load the rules of the notes and their index |
+| The `kb-capture` skill | `.claude/skills/kb-capture/` | A skill is a folder of instructions that Claude Code uses when a task calls for it, or when you type its name after a slash. This one writes down what a session learned, in the right file and format |
+| The `qa` skill, optional | `.claude/skills/qa/` | `/qa <what to test>`: ad-hoc testing that runs the cards. Leave it out if you have a QA skill of your own |
+
+**What you need.** Claude Code; this was checked with version 2.1.286. PowerShell: Windows PowerShell 5.1, which every Windows has, is enough. For testing in a browser, a browser tool that Claude Code can drive; the setup itself does not need one.
+
+**The quickest way to set it up.** Save this document anywhere on your machine. Start `claude` in your project's folder and say:
+
+> Read the first 343 lines of `C:\path\to\claude-code-knowledge-base-local.md` and set up the knowledge base they describe.
+
+The session asks you a few questions with options to pick from, installs the files, checks them, and asks for the few facts only you know. It takes a few minutes. Part 3 has the same setup by hand.
+
+How often you are asked to approve something depends on your permission mode. In Manual mode Claude Code asks before each file it writes and each command it runs: about half a dozen times here, one of them for a small script named `kb-setup.ps1` that does the installing. In auto mode, where a terminal session starts from version 2.1.283, it reviews these actions itself and you may see no prompt. If it asks whether it may read a file outside the project folder, which this document is, allow it.
+
+**What to expect afterwards.**
+
+- The first time a session runs a workflow it is as slow as today, and it ends by writing the card. Every later session starts from the card.
+- A session that learns something writes it down unasked and ends its reply with a line such as `KB: kb/workflows/login.md corrected`.
+- What makes a test run quick is a card with a ready-made script (a "Fast path"), known expected results, and defaults for environment and account so that the session has nothing to ask. "Making a test run quick" in Part 3 has the details and the numbers.
+
+## Part 2 - Setup by a Claude session
+
+These steps are for the Claude Code session that was asked to set this up. Work through them in order.
+
+Keep to these throughout:
+
+- The person may be new to Claude Code. Be brief and concrete, and say what you are about to do before each step.
+- Never overwrite, move or delete anything that was there before you started. The only existing files you change are the ones a step names. If something you would create exists, keep it and say so.
+- Write nothing outside the folder chosen in step 1 and its `.claude` folder. Two exceptions: `kb-setup.ps1`, which you save in the current folder and delete again, and the person's own QA skill in step 5, wherever it is.
+- No network, no git commit, no push.
+- Never write a password, token or key into a file, even if the person offers one.
+- In Manual mode Claude Code asks the person to approve what you write and run. Say once, before the first prompt, that these prompts are expected.
+- If a step fails, stop and say what failed in one or two lines.
+
+### Step 1 - Look, then ask
+
+Look first, without asking:
+
+- **The folder.** Is the current folder the root of a git repository (it has a `.git` folder), a folder inside one (`git rev-parse --show-toplevel` names a folder above it), or a worktree or submodule (`.git` is a file)? Is it the person's profile folder? Then "this project only" would install into the profile folder: say so, and ask them to start `claude` in the project's folder.
+- **An earlier setup.** Is there an `app-kb` folder or a rule file `app-kb.md`, here or in the profile folder (`~/app-kb`, `~/.claude/rules/app-kb.md`)? In the place they are about to choose, this is a second run: say so, take the application's name from the first line of its `KB.md`, and add only what is missing. In the other place, two copies would both load: say so, and ask which one they want before going on. An `app-kb` that has a `.git` folder is a shared repository: stop, the companion document applies.
+- **A QA skill.** Look at your own list of skills, and in `.claude/skills/` here and in `~/.claude/skills/`. Note the name of a QA or testing skill and where it is.
+- **The name.** What is the application called (README title, package name, folder name)?
+
+Then ask. Use your question tool if you have one, so that the person picks from options; otherwise ask in plain text, in one message. Put the recommended option first, and name the real folders in the options of question 1. Question 4 depends on the answer to question 1: ask it afterwards, or word it "if this project only". If nobody can answer (a non-interactive run), take the first option of each and say so in the hand-over.
+
+| # | Question | Options |
+|---|---|---|
+| 1 | Where should the knowledge base apply? | **This project only** (recommended): the notes and the skills exist only in sessions started in this folder; everything is installed here, nothing in your profile folder. **Every project on this machine**: they load in every session you start, whatever the folder; everything is installed in your profile folder. For someone who works on this one application |
+| 2 | What is the application called? | The names you found, the likeliest first; the person can type another. No colon, no `#`, no double quote |
+| 3 | Only if you found a QA skill: keep it? | **Keep mine and connect it** (recommended): the `qa` skill of this document is not installed, and step 5 adds a short block to yours. **Install the `qa` skill of this document as well**. If their skill is itself named `qa`, do not offer the second option: two skills cannot share a name |
+| 4 | Only for "this project only" inside a git repository: should the new files stay out of the project's git changes? | **Yes, keep them on my machine** (recommended): they are listed in the repository's `info/exclude` file, which nobody else sees. **No, I will commit them with the project** |
+
+### Step 2 - Install
+
+Save the block under "The setup script" in Part 3 as `kb-setup.ps1` in the current folder, exactly as written except for its first five assignments:
+
+| Line | Set it to |
 |---|---|
-| `KB.md`, `kb/index.md` | Loaded into every session: the rules (read before you explore, give back what you learn) and one row per file saying when to read it. About 70 lines together |
-| `kb/workflows/` | Workflow cards: steps with locators, the observable result of each step, checks, gotchas and, optionally, the whole flow as one script. Three examples to replace: sign in, quick search, advanced search |
-| `kb/qa/` | How testing is done here: the browser tool and the locator notation (`driver.md`), a checklist, the report format, known issues |
-| `kb/app/`, `kb/dev/` | What the app is, environments and accounts, test data with known answers; a codebase map and gotchas |
-| `qa` skill | `/qa <what to test>`: loads the cards, runs known flows as written, explores only what no card covers, reports in a fixed format, records what it learned |
-| `kb-capture` skill | `/kb-capture`: writes what a session learned into the right file on a branch, runs the validator, and asks before it pushes |
-| `scripts/validate-kb.ps1` | The checks for a pull request: every file indexed, links resolve, front matter complete, nothing that looks like a credential. Warns on age and size |
-| `azure-pipelines.yml`, `.azuredevops/` | Pull request validation and a pull request template for Azure DevOps. The only host-specific files |
+| `$guide` | The full path of this document |
+| `$app` | The answer to question 2, in single quotes; an apostrophe in the name is written twice |
+| `$scope` | `'project'` or `'user'`, from question 1 |
+| `$ownSkill` | `$true` if they keep their own QA skill, else `$false` |
+| `$hide` | `$false` if they answered "No" to question 4, else `$true` |
 
-## How it works
+Run it from the current folder, then delete `kb-setup.ps1`, whether it worked or not:
 
-```text
- each developer's machine                                          git host
- ------------------------                                          --------
- ~/.claude/rules/app-kb.md
-     @~/app-kb/KB.md  ----->  ~/app-kb/KB.md       the rules          main
-     the folder's full path       @kb/index.md     one row per file    ^  |
-                              ~/app-kb/kb/...      read on demand      |  +-- git pull when a
-                                                                       |      session starts
- session:  index -> cards -> /qa -> report                             |
-           learned something -> /kb-capture -> branch kb/<topic> -> pull request
-                                                                (validator + one reviewer)
-```
+- Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File kb-setup.ps1`
+- macOS, Linux: `pwsh -NoProfile -File kb-setup.ps1`
 
-Five things make it something sessions use without being told, rather than a folder of documents:
+It prints one line per file. It worked when the output has no warning and no error, and its last line starts with `done:` and names the folder you expect. If PowerShell refuses to run script files on this machine, run the script's text instead, in PowerShell: `Invoke-Expression (Get-Content -Raw .\kb-setup.ps1)`.
 
-1. **Always in context.** A two-line rule file in the developer's own `~/.claude/rules` folder imports `KB.md`, which imports the index. Every Claude Code session on that machine, in every project, starts knowing what is documented and when to read it.
-2. **Read before explore.** `KB.md` tells the session to open the matching files before it searches code or clicks around, and to run a card as written when one exists. The `qa` skill makes that its first step.
-3. **Current.** A `SessionStart` hook runs `git pull`. Git's summary of what changed goes into the session's context, so the session knows which cards are new.
-4. **Give back.** `KB.md` lists the moments a session must write something down: a flow without a card, a card that was wrong, a code change that alters a flow. The QA report, like every reply after work on the app, ends with a `KB:` line saying what was recorded, so a skipped update is visible.
-5. **Reviewed.** A session writes on a local `kb/<topic>` branch without asking, and asks before it pushes. The change reaches `main` through a pull request checked by the validator and one person.
+A line that starts with `not hidden from git:` means that the current folder has no `.git` folder of its own (a worktree, a submodule, or a folder inside the repository). If the person wanted the files hidden, add the patterns from that line yourself to the file that `git rev-parse --git-path info/exclude` names, each with the output of `git rev-parse --show-prefix` in front: with the prefix `services/portal/`, the pattern `/app-kb/` becomes `/services/portal/app-kb/`. Then check with `git status --short` that the new files no longer show.
 
-## Before you start
+If there is no PowerShell at all, or the script cannot be run on this machine, do by hand what the script does (this is the one case in which you read Part 4). Call `<root>` the current folder for "this project only", or the person's profile folder for "every project":
 
-- git, and Claude Code. This was checked with Claude Code 2.1.286.
-- PowerShell for the validator. Windows PowerShell 5.1, which every Windows has, is enough. On macOS and Linux install PowerShell 7, or leave the validator to the pipeline.
-- A browser tool that Claude Code can drive, for the `qa` skill. The template does not choose one: `kb/qa/driver.md` is where you describe yours.
-- For step 7, the right to edit branch policies on the repository.
+1. For each `### File:` block in Part 4, write its content, with `YourApp` replaced by the application's name: a path that starts with `.claude/skills/` goes to `<root>/.claude/skills/...`, every other path to `<root>/app-kb/...`. Leave out `.claude/skills/qa/SKILL.md` if they keep their own skill.
+2. Create `<root>/.claude/rules/app-kb.md` with these two lines, the full path written with forward slashes:
 
-## Coming from a local copy
-
-A knowledge base that one person set up with the companion document becomes the repository's first content. Nothing is rewritten: the files are the same, and the `kb-capture` skill notices by itself that the folder is now a git repository and starts working on branches.
-
-1. Do step 1 below: create the empty repository and clone it. If the local copy already sits at `app-kb` in your profile folder, rename that folder first (to `app-kb-local`, say), so that the clone can take its place.
-2. Copy the local copy into the clone. In PowerShell:
-
-   ```powershell
-   $local  = 'C:\work\myapp\app-kb'              # the local knowledge base folder
-   $skills = 'C:\work\myapp\.claude\skills'      # where its skills are: the project's .claude\skills, or "$HOME\.claude\skills"
-   $clone  = Join-Path $HOME 'app-kb'             # your clone of the empty repository
-   Copy-Item -Recurse -Force (Join-Path $local '*') $clone
-   New-Item -ItemType Directory -Force (Join-Path $clone '.claude\skills') | Out-Null
-   foreach ($name in 'qa', 'kb-capture') {            # take 'qa' out of this list if the qa skill is your own
-       $from = Join-Path $skills $name
-       if (Test-Path -LiteralPath $from) { Copy-Item -Recurse -Force $from (Join-Path $clone '.claude\skills') }
-   }
+   ```
+   @../../app-kb/KB.md
+   The <application> knowledge base is the folder <full path of root>/app-kb - use its full path to open its files, to search them and in shell commands.
    ```
 
-3. Do step 2 below. The snippet adds what a local copy does not have (the pipeline file, the pull request template, `.gitignore`, a skill you left out) and keeps everything you wrote.
-4. Go on with steps 3 and 4 below (validator, commit, push).
-5. Remove the local wiring before you install, so that nothing is loaded twice and the skills can be linked. A copy for one project: delete the rule file `.claude/rules/app-kb.md`, the skill folders `kb-capture` and `qa` in the project's `.claude/skills`, and the project's `app-kb` folder. A copy for every project: delete the folders `kb-capture` and `qa` in `~/.claude/skills`, and the renamed `app-kb-local`; the rule file in `~/.claude/rules` stays, because the install writes it anew. In both cases keep a `qa` skill that is your own.
-6. Install it as every developer will ("Install on each developer's machine"), then go on with step 6 below.
+   If the files will be committed with the project (question 4 answered "No"), write `the folder app-kb next to the .claude folder this file is in` in place of `the folder <full path of root>/app-kb`: a full path is right on one machine only.
+3. For "this project only" in a git repository, unless they answered "No" to question 4: append the lines `/app-kb/`, `/.claude/rules/app-kb.md`, `/.claude/skills/kb-capture/` and, if you installed that skill, `/.claude/skills/qa/` to `.git/info/exclude`.
 
-## Set it up (once, by whoever owns the repository)
+### Step 3 - Check
 
-**1. Create an empty repository** on your git host and clone it into `app-kb` in your profile folder, the folder Claude Code calls `~` (on Windows `%USERPROFILE%`). On Windows do this in PowerShell, `git clone <REPOSITORY URL> "$HOME\app-kb"`, not in Git Bash, whose `$HOME` can be another folder. If you want another folder name, set it in the next step and use it everywhere below.
+1. Run the validator: `powershell -NoProfile -ExecutionPolicy Bypass -File "<root>/app-kb/scripts/validate-kb.ps1"` (macOS, Linux: `pwsh -NoProfile -File ...`). Its last line must say `0 errors`. Notes about files never verified and lines with TODO are expected. If script files are refused, run its text: `powershell -NoProfile -Command "& ([scriptblock]::Create((Get-Content -Raw -LiteralPath '<root>/app-kb/scripts/validate-kb.ps1'))) -Root '<root>/app-kb'"`. If it says that it cannot run on this machine, go on and say so in the hand-over.
+2. Read the rule file. It has the two lines above, and the folder it names exists.
+3. Only for "every project on this machine": a session started in another project may be asked before it reads the folder, and a non-interactive one is refused, unless the folder is listed in `permissions.additionalDirectories` in `~/.claude/settings.json`. Offer to add it. If they agree, add the folder's full path there and leave every other key of that file as it is; if the file does not exist, create it with only that entry.
 
-**2. Unpack the files.** Save this guide in the folder your terminal is in, set `$app` (and `$guide` and `$folder` if yours differ), and paste the snippet into PowerShell (Windows PowerShell 5.1 or PowerShell 7). It writes every block of the Files section into the clone, puts your application's name in place of `YourApp` and your folder name in place of `app-kb`, and never overwrites a file that exists.
+### Step 4 - Ask for what only the person knows
+
+Two files decide how many questions later sessions have to ask. Fill them now, from answers, not from guesses. What the person does not know stays as the `TODO` that is there. Read each file first.
+
+`app-kb/kb/app/environments.md`:
+
+- Which environments exist, and their addresses. Which one sessions should use for tests by default. Production is always "no".
+- The accounts used for testing, by role: the account names only.
+- Where the password comes from. Offer: **I sign in myself in the browser** (recommended), **The browser stays signed in between sessions**, **I give it in the request** (it then stays in that session's transcript on this machine), **A secret store or environment variable**.
+- Whether an account locks after failed sign-ins, if they know.
+
+`app-kb/kb/qa/driver.md`:
+
+- Look at your own tools. If you have a browser tool, fill in the "Tool" table and the "With our tool" column from that tool's own descriptions. If you have none, ask which tool they use, and leave the rest as `TODO`.
+- Where screenshots and other evidence files go. Offer: **A `qa-runs` folder in this project, kept out of git** (recommended; when question 4 was answered "Yes", add `/qa-runs/` to the same exclude file), **Another folder**, which they name.
+
+Set `last_verified` to today's date only in a file whose content the person confirmed. When both files are done, run the validator again; it must still say `0 errors`.
+
+### Step 5 - Connect their own QA skill
+
+Only if they chose to keep it. Show them the block under "Connecting a QA skill of your own" in Part 3, say that it goes at the end of their skill's `SKILL.md`, and add it when they agree. If the skill is in their profile folder, say that the block will then apply in every project, and that it does nothing in a project without a knowledge base. In Manual mode Claude Code asks them to approve the edit, because the file is inside `.claude`; if the edit is refused, leave the block with them to paste. It is their file: change nothing else in it.
+
+### Step 6 - Hand over
+
+In ten lines or fewer, tell the person:
+
+- what was installed and where, and what you took as the default because nobody answered;
+- that the notes take effect in the **next** session, because Claude Code reads instruction files when a session starts: they should start a new `claude` in the same folder;
+- how to see that it works: in the new session, ask "Which file tells you how to run an advanced search?" and expect the answer straight from the index;
+- the next useful step: walking through sign-in once, so that the first card gets written.
+
+Then offer, once, to write that first card now. If they accept: read `app-kb/kb/workflows/_TEMPLATE.md`, `app-kb/kb/workflows/login.md` and `app-kb/kb/qa/driver.md`; go through sign-in in the browser with them, letting them do any step that needs a person; then replace the example steps in `login.md` with what really happened, set `status: verified`, `last_verified` and `verified_on` (the environment and build), and run the validator again.
+
+## Part 3 - Reference
+
+### Setting it up by hand
+
+1. Save this document on your machine.
+2. Open PowerShell in the folder the knowledge base should belong to: the project's root folder for "this project only".
+3. Copy the script below into an editor, change the first five assignments, and paste it into PowerShell. Or save it as `kb-setup.ps1` in that folder and run `powershell -NoProfile -ExecutionPolicy Bypass -File kb-setup.ps1`. The last line it prints starts with `done:` and names the folder.
+4. Run the validator: `powershell -NoProfile -ExecutionPolicy Bypass -File app-kb\scripts\validate-kb.ps1`. It ends with `0 errors`.
+5. For "every project" only: add the folder to `permissions.additionalDirectories` in `~/.claude/settings.json`, so that sessions in other projects read it without asking.
+6. Start a new `claude` in the same folder and ask "Which file tells you how to run an advanced search?".
+7. Fill in `app-kb/kb/app/environments.md` yourself, and ask the session to fill in `app-kb/kb/qa/driver.md` for the browser tool it has.
+
+### The setup script
+
+It creates files and never overwrites one, so it can be run again: what exists is kept. The one file it adds lines to is the repository's own `.git/info/exclude`, and only when `$hide` is set.
 
 ```powershell
-# Unpack the knowledge base template from this guide.
-$guide  = '.\claude-code-team-knowledge-base.md'   # this document
-$app    = 'YourApp'                                # your application's name, e.g. 'Contoso Portal' (it goes into YAML: no colon, no #, no double quote)
-$folder = 'app-kb'                                 # the folder developers clone into, in their profile folder (no spaces)
-$dest   = Join-Path $HOME $folder                  # where the files go: your clone of the empty repository
+# kb-setup: installs the knowledge base from this document. It creates files and never overwrites one.
+$guide    = "$HOME\Downloads\claude-code-knowledge-base-local.md"   # where this document is saved
+$app      = 'YourApp'       # the application's name, e.g. 'Contoso Portal' (it goes into YAML: no colon, no #, no double quote)
+$scope    = 'project'       # 'project' = this project only (run this in the project's root folder); 'user' = every project on this machine
+$ownSkill = $false          # $true if you keep a QA skill of your own: the qa skill of this document is then left out
+$hide     = $true           # 'project' scope in a git repository: keep the new files out of the project's git changes
 
-if (-not (Test-Path -LiteralPath $dest)) {
-    Write-Warning "Folder not found: $dest. Clone the empty repository there first. Nothing was written."
-} elseif (-not (Test-Path -LiteralPath $guide)) {
-    Write-Warning "Guide not found: $guide. Put the path of this document in `$guide. Nothing was written."
-} else {
+$root = (Get-Location).Path
+# Windows PowerShell 5.1 started in a folder with [ or ] in its name reports its own program folder: use the script's folder then.
+if ($env:windir -and $root -like "$env:windir*" -and $PSScriptRoot) { $root = $PSScriptRoot }
+if ($scope -eq 'user') { $root = $HOME }
+$kb    = Join-Path $root 'app-kb'
+$found = @()
+if (Test-Path -LiteralPath $guide) {
     $text  = (Get-Content -Raw -LiteralPath $guide) -replace "`r`n", "`n"
     $found = @([regex]::Matches($text, '(?ms)^### File: `([^`]+)`\n+(`{4,})[^\n]*\n(.*?)\n\2[ \t]*$'))
-    foreach ($m in $found) {
-        $name = $m.Groups[1].Value
-        $path = Join-Path $dest $name
-        if (Test-Path -LiteralPath $path) { "kept (exists): $name"; continue }
-        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $path) | Out-Null
-        $body = $m.Groups[3].Value.Replace('YourApp', $app).Replace('app-kb', $folder)
-        New-Item -ItemType File -Path $path -Value ($body + "`n") | Out-Null
-        "wrote: $name"
+}
+$problem = ''
+if ($found.Count -lt 19) { $problem = "found $($found.Count) of 19 files in $guide. Put the path of this document in `$guide, and use the markdown file itself, not text copied from a rendered page" }
+elseif ($scope -ne 'project' -and $scope -ne 'user') { $problem = "`$scope is '$scope'. It must be 'project' or 'user'" }
+elseif ($app -match ':|#|"|^\s*$') { $problem = "the application's name is empty or has a colon, a # or a double quote in it" }
+elseif ($env:windir -and $root -like "$env:windir*") { $problem = "the folder to install into came out as $root. Save this script in the project's folder and run it from there" }
+if ($problem) {
+    Write-Warning "Nothing was written: $problem."
+} else {
+    try {
+        $wroteQa = $false
+        foreach ($m in $found) {
+            $name = $m.Groups[1].Value
+            if ($name -match '^(azure-pipelines\.yml|\.gitignore|\.azuredevops/)') { continue }       # only a shared repository needs these
+            if ($ownSkill -and $name -like '.claude/skills/qa/*') { continue }
+            $path = Join-Path $kb $name
+            if ($name -like '.claude/skills/*') { $path = Join-Path $root $name }                      # skills go into the .claude folder next to app-kb
+            if (Test-Path -LiteralPath $path) { "kept (exists): $name"; continue }
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $path) -ErrorAction Stop | Out-Null
+            New-Item -ItemType File -Path $path -Value ($m.Groups[3].Value.Replace('YourApp', $app) + "`n") -ErrorAction Stop | Out-Null
+            if ($name -like '.claude/skills/qa/*') { $wroteQa = $true }
+            "wrote: $name"
+        }
+        $gitDir = Join-Path $root '.git'
+        $inRepo = $false                                                                           # is this folder, or one above it, a git repository?
+        $up = $root
+        while ($up -and -not $inRepo) { $inRepo = Test-Path -LiteralPath (Join-Path $up '.git'); $up = Split-Path -Parent $up }
+        # The rule file: two lines that make sessions load the knowledge base.
+        $rule = Join-Path $root '.claude/rules/app-kb.md'
+        if (Test-Path -LiteralPath $rule) { 'kept (exists): .claude/rules/app-kb.md' } else {
+            $where = "the folder $($kb.Replace('\', '/'))"
+            if ($scope -eq 'project' -and $inRepo -and -not $hide) { $where = 'the folder app-kb next to the .claude folder this file is in' }   # committed: a full path is right on one machine only
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $rule) -ErrorAction Stop | Out-Null
+            $lines = "@../../app-kb/KB.md`nThe $app knowledge base is $where - use its full path to open its files, to search them and in shell commands.`n"
+            New-Item -ItemType File -Path $rule -Value $lines -ErrorAction Stop | Out-Null
+            'wrote: .claude/rules/app-kb.md'
+        }
+        # Project scope: keep the new files out of the project's git changes. The list is local; nobody else sees it.
+        if ($hide -and $scope -eq 'project') {
+            $want = @('/app-kb/', '/.claude/rules/app-kb.md', '/.claude/skills/kb-capture/')
+            if ($wroteQa) { $want += '/.claude/skills/qa/' }
+            if (Test-Path -LiteralPath $gitDir -PathType Container) {
+                New-Item -ItemType Directory -Force -Path (Join-Path $gitDir 'info') -ErrorAction Stop | Out-Null
+                $exclude = Join-Path $gitDir 'info/exclude'
+                $have = @()
+                if (Test-Path -LiteralPath $exclude) { $have = @(Get-Content -LiteralPath $exclude) }
+                $add = @($want | Where-Object { $have -notcontains $_ })
+                if ($add.Count -gt 0) {
+                    Add-Content -LiteralPath $exclude -Value ("`n" + ($add -join "`n") + "`n") -NoNewline -Encoding Ascii -ErrorAction Stop
+                    "hidden from git (.git/info/exclude): $($add -join '  ')"
+                }
+            } elseif ($inRepo) {
+                "not hidden from git: this folder has no .git folder of its own. Patterns to add by hand: $($want -join '  ')"
+            }
+        }
+        "done: $scope scope, knowledge base in $kb"
+    } catch {
+        Write-Warning "Stopped before the end: $($_.Exception.Message) What was written stays. Correct the cause and run this again: existing files are kept."
     }
-    "$($found.Count) files in the guide; destination $dest"
-    if ($found.Count -ne 22) { Write-Warning 'Expected 22. Use the markdown file itself, not text copied from a rendered page.' }
 }
 ```
 
-Without PowerShell, give Claude Code this guide and say: "Create every file from the Files section of this guide under the app-kb folder in my profile folder, exactly as written, with YourApp replaced by <the name>."
+### Project or user: where things go
 
-**3. Run the validator** from the clone. A fresh copy reports `0 errors, 0 warnings`, with notes about files that were never verified and lines with TODO left.
+Claude Code reads its configuration from two folders with the same layout. That is the whole difference between "this project only" and "every project on this machine".
 
-```
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-kb.ps1      (Windows)
-pwsh -NoProfile -File scripts/validate-kb.ps1                                    (macOS, Linux)
-```
-
-**4. Commit and push** the files. Everything below assumes the branch is called `main`.
-
-```
-git add -A
-git commit -m "kb: template"
-git branch -M main
-git push -u origin main
-```
-
-**5. Install it on your own machine** (next section), so that Claude can help with step 6.
-
-**6. Fill in what only your team knows.** Search the clone for `TODO` to list every open spot; the validator prints how many are left. Do this while `main` is still open to you, in this order:
-
-| File | What goes in | A prompt that does most of the work |
+| | This project only | Every project on this machine |
 |---|---|---|
-| `README.md`, "Contribute" and "Maintainers" | How a pull request is opened here, and who reviews what. The `kb-capture` skill reads the first | Write these yourself |
-| `kb/qa/driver.md` | Your browser tool, how a locator is passed to it, how to wait, where evidence goes | "Fill in the TODOs of kb/qa/driver.md in the knowledge base for the browser tool you have in this session. Take the facts from the tool's own descriptions and ask me what you cannot see." |
-| `kb/app/environments.md` | Addresses, where sessions may test, accounts by role, where credentials come from | Write this one yourself: it is policy |
-| `kb/workflows/login.md`, then the other two cards | The real steps | "Walk through signing in to <app> on test with me. Do each step in the browser and tell me what you see. When it works end to end, write kb/workflows/login.md from the template." |
-| `kb/app/test-data.md` | Records and search terms with known results | "Run these searches on test and record the counts in kb/app/test-data.md: ..." |
-| `kb/qa/checklist.md` | The checks that are specific to your application | Write these yourself |
-| `kb/app/overview.md`, `kb/dev/` | Fill as it comes up | `/kb-capture` at the end of ordinary sessions |
+| The notes | `app-kb/` in the project folder | `app-kb/` in your profile folder |
+| The rule file | `.claude/rules/app-kb.md` in the project | `~/.claude/rules/app-kb.md` |
+| The skills | `.claude/skills/<name>/` in the project | `~/.claude/skills/<name>/` |
+| Settings and hooks, if you ever add any (a hook that guards certain actions, for example) | `.claude/settings.json` in the project (`settings.local.json` for yours alone) | `~/.claude/settings.json` |
 
-**7. Protect `main`**, as soon as a second person can review. From then on every change, yours included, needs a pull request and someone else's approval. In Azure DevOps:
+`~` is your profile folder (on Windows `C:\Users\<you>`, also written `%USERPROFILE%`). What is in a project's `.claude` folder is committed with the project unless you keep it out, which is what the setup does for its own files.
 
-- Pipelines > New pipeline, choose the repository and "Existing Azure Pipelines YAML file", then `/azure-pipelines.yml`. Run it once. If the organization has no hosted agents, put your own pool in the file first.
-- Repos > Branches > `main` > Branch policies. Require a minimum number of reviewers: 1. Build validation: add the pipeline, Trigger "Automatic", Policy requirement "Required". Limit merge types: Squash merge.
-- Optional: Automatically included reviewers with the path filter `/KB.md;/.claude/*;/scripts/*;/azure-pipelines.yml;/kb/qa/driver.md;/kb/app/environments.md`, naming the people who own the instructions. Those files decide what every session does and where it may test.
-- The pull request template in `.azuredevops/` is picked up from the default branch without any setting.
+Keep one knowledge base per application, in one of the two places. A copy in the project and a copy in the profile folder would both load in that project.
 
-Azure Repos does not read a `pr:` trigger from YAML; the branch policy is what runs the pipeline on pull requests. Draft pull requests do not trigger it. On another git host the equivalent is branch protection plus a job that runs `scripts/validate-kb.ps1` with `pwsh`.
+### Using it
 
-**8. Ask the team to install.**
+- `/qa <what to test>` runs a test from the cards: a short plan, the run, a report. A plain request ("test the advanced search") usually starts the same skill.
+- Ask for other work as usual. A session that touches the app reads the matching notes first and ends its reply with a `KB:` line saying what it recorded.
+- `/kb-capture` saves what the session just worked out. Sessions also do this unasked.
+- The quickest way to add a workflow: "Walk through <flow> with me and write the card."
+- If another tool already holds notes or logs of earlier runs (test scripts, run logs, another agent's notes), hand them to a session: "Write workflow cards from these, as drafts." Then run each card once so that it becomes verified.
+- Check the content any time: `powershell -NoProfile -ExecutionPolicy Bypass -File app-kb\scripts\validate-kb.ps1`. It reports missing index rows, broken links and the common shapes of a credential. That last check is a net, not a guarantee: read what goes into the notes.
 
-## Install on each developer's machine
+If a new session does not seem to know the notes: was `claude` started in the folder that holds `.claude/rules/app-kb.md`? `/context` lists the instruction files a session loaded. If `/qa` or `/kb-capture` is not offered when you type `/`, type `/reload-skills` or start a new session.
 
-`README.md` in the repository has the exact commands. What each step is for:
+### Connecting a QA skill of your own
 
-| Step | What it does | Without it |
-|---|---|---|
-| Clone into `app-kb` in the profile folder | The import below looks there | - |
-| The rule file `~/.claude/rules/app-kb.md`, two lines: the import `@~/app-kb/KB.md` and the folder's full path | The import loads the rules and the index into every session on the machine. An import in your own user folder needs no approval dialog. The path line gives sessions a path that means the same in every shell | Sessions do not know the knowledge base exists |
-| `permissions.additionalDirectories` in `~/.claude/settings.json` | Sessions read the files without asking. Edits still follow your permission mode | In Manual mode each read outside the project is asked about, in auto mode the first one is, and a headless run is refused |
-| The `SessionStart` hook in the same file | `git pull` when a session starts or resumes; the summary of changes goes into the session's context | The copy goes stale until someone pulls by hand |
-| Links in `~/.claude/skills/` | `/qa` and `/kb-capture` exist in every project and follow the repository | The skills exist only in sessions started inside the clone |
-
-To check: start `claude` in any folder. Typing `/` shows both skills, and "Which file tells you how to run an advanced search?" is answered from the index without a search. The README lists what to look at when it is not.
-
-Worth knowing:
-
-- **The home folder.** Claude Code's `~` is the profile folder. Git Bash takes its `$HOME` from the home drive settings, which on a machine with a network home drive is a different folder. That is why the clone is made in PowerShell, why the rule file states the folder's full path, and why the hook, the settings and the skills use that path instead of `$HOME`.
-- **The hook** is a plain command, so it runs the same under Git Bash, PowerShell or `sh`. The first reply of a session waits for it, for at most the 30 seconds of its timeout. If the pull fails (offline, sign-in expired) the session starts anyway and shows a hook error line; run the pull once in a terminal to sign in again.
-- **Managed settings.** An organization can switch off the hooks of users (`allowManagedHooksOnly`, `disableAllHooks`): then leave the hook out and pull by hand. It can limit skills and hooks to plugins (`strictPluginOnlyCustomization`): then the linked skills do not load, and the skills have to be shipped as a plugin. And it can leave out personal instruction files altogether, rule files among them (the value `managed-only` of the "Project instructions" setting): then nothing loads by itself, and the import has to come from the organization's own managed instructions.
-- `additionalDirectories` grants file access only. It does not load skills from that folder, which is why the skills are linked. The text of a linked skill is read when it is used, so it follows every pull.
-- This reaches Claude Code sessions that run on the developer's machine. Cloud and Cowork sessions do not load personal skills and do not follow the import.
-
-## Day to day
-
-- Developers ask for work as usual. A session that touches the app reads the matching files first and ends its reply with a `KB:` line.
-- `/qa advanced search by date range on test` runs a test: a short plan, the run, then a report in a fixed form. When every check passed that is five lines. Otherwise it is the verdict, a table of checks with evidence, each defect with steps to reproduce, what was not tested, and the `KB:` line. A plain request ("test the advanced search") usually triggers the same skill.
-- `/kb-capture` after working something out saves it. Sessions also do this unasked. "Unasked" means without a question in the conversation: they write and commit on a local branch, show the change, and push only when the developer agrees. The permission prompts of your permission mode for edits and git commands still appear, and a session that cannot get them records nothing.
-- A correction lives on its branch until the pull request is merged, so merge these quickly. Until then other sessions, the developer's own included, still read the old text.
-- A reviewer of a knowledge base pull request checks: it was verified and says how; no credentials, real data or screenshots; one fact in one place; a new file has an index row; a changed Fast path was read like code.
-- Add one line to the pull request template of the application's repository: "Knowledge base card updated, or no documented flow affected". The session that changes a screen is the one that knows the card is now wrong.
-
-## Why it is built this way
-
-| Choice | Reason |
-|---|---|
-| Two small files always loaded, the rest on demand | Imported files load in full at launch and cost context in every session. The Claude Code documentation advises staying under 200 lines per instruction file; the validator warns when the pair passes 200 |
-| Index rows say "Read when <task>" | A session matches its task against the trigger. A topic name alone does not tell it when to read |
-| Every step of a card has an "Expect" | It lets a session run a flow without looking at the page between steps, and it is how an out-of-date card shows itself |
-| Locators in a neutral notation, the tool in one file | Browser tools rename their functions and parameters between releases, and teams change tools. Cards should survive that; `driver.md` absorbs it |
-| An optional Fast path per card | One call instead of one call per step. In the measurement below this is what cut browser calls and tokens; the step table alone did not. It is also code that runs with the rights of the browser tool, so it is reviewed as code, and a tool that runs arbitrary scripts is something to allow on purpose |
-| `status` and `last_verified` on every file | Sessions trust what is verified and treat drafts as starting points. Nobody re-verifies for its own sake |
-| Pull requests | The content steers an agent that has tools on every developer's machine. It gets the same review as code |
-| Write locally without asking, ask before pushing | In a test run, a session told to "ask first" did not record a defect it had found. Told that a local branch is its own to write, it recorded it and stopped at the push |
-| The entry file is not named `CLAUDE.md` | Claude Code loads a `CLAUDE.md` it finds in the folder a session starts in. Under that name the file would load on top of the import in sessions started inside the repository |
-| Skills are linked, not copied | A copy goes stale; a link follows the repository |
-| Full paths, not `$HOME` | See "The home folder" above |
-| Plain ASCII files, one script, no packages | The package travels as one document and has to work without installing anything, and Windows PowerShell 5.1 misreads non-ASCII scripts that have no byte-order mark |
-
-## What it cannot do
-
-- **It is guidance, not enforcement.** Claude Code treats instruction files as context. In the last round of test runs every session used the skill, the report format and the `KB:` line. In the rounds before, sessions twice left out a step until the skill spelled it out: a check from the checklist, and the validator run for a local copy. Expect the same in daily use: most of it followed, not all of it every time. If the give-back step is what gets skipped, see "Enforcing the give-back" below.
-- **The index is read when the session starts.** A row added by the pull of the same session start may be missing from it. `KB.md` tells sessions to read the index again when the pull summary lists it.
-- **Cards drift.** A card is right on the day it was verified. A failed "Expect" is how drift shows; the validator only reports age.
-- **A correction is invisible until it is merged.** It sits on a local branch, then in a pull request. The `kb-capture` skill lists branches that were never merged each time it runs, so they are not forgotten.
-- **The credential check is a net, not a guarantee.** It catches the common shapes of secrets, including a value in a table column headed "Password". Review is the control.
-- **Sign-in that needs a person stays with the person.** The login card says where to stop and hand over.
-- **One clone per machine.** All sessions on a machine share it. A session that leaves the clone on a `kb/` branch changes what the others read; the `kb-capture` skill always switches back to `main`.
-- **Small apps gain little speed.** See the measurement: on a small app a current model explores quickly, and cards alone do not make a run shorter. What they add there is known expected results, the checklist, the report, and the record.
-
-## Adapting it
-
-**Inside the application's repository instead of its own.** Put `KB.md`, `kb/` and `scripts/` under a folder such as `docs/kb/`, move the two skills to the repository's `.claude/skills/`, and add two lines to the repository's `CLAUDE.md`: `@docs/kb/KB.md` and "The knowledge base is the folder docs/kb in this repository." There is then nothing to install and no hook, and a card changes in the same pull request as the screen. The `kb-capture` skill needs no change: it sees that the folder is not a repository of its own and writes straight into the files, so the change rides on the developer's own branch. Run the validator as `docs/kb/scripts/validate-kb.ps1`. The costs: only sessions started in that repository see it, and every note goes through the application's review process.
-
-**Keeping your own QA skill.** Keep it, do not link the template's `qa` (or link it under another name), and add the two places where the knowledge base connects:
+Add this to the end of its `SKILL.md`. It is the only link the skill needs.
 
 ```markdown
 ## Knowledge base
@@ -233,17 +279,70 @@ After the test: if a card was wrong, a flow had no card, or a defect is not in `
 `kb-capture` skill without asking first. End the report with a `KB:` line saying what was recorded, or "nothing new".
 ```
 
-**More than three workflows.** Add a card per workflow and an index row per card. When two cards need the same locators, move them to `kb/pages/<page>.md` and link to it, so that a locator is written in one place. When `KB.md` and the index together pass 200 lines, give an area its own `kb/<area>/index.md`, listed in the main index with one row and read on demand, and move that area's rows there. The validator accepts a row in any `index.md` under `kb/`.
+### Making a test run quick
 
-**Enforcing the give-back.** A `Stop` hook can refuse to end a turn whose final message has no `KB:` line: it reads `last_assistant_message` from its input, prints `{"decision": "block", "reason": "..."}`, and checks `stop_hook_active` so that it does this once. Start without it. Add it only if the `KB:` lines show that updates are being skipped.
+A run is quick when the session has nothing to find out, nothing to ask and little to say. What gets it there, in order of effect:
 
-**Another git host.** Only `azure-pipelines.yml` and `.azuredevops/pull_request_template.md` are specific to Azure DevOps. The validator is a plain script.
+1. **A Fast path on the cards every test passes through**, such as sign-in and the search itself. A Fast path is a short script on the card that runs the whole flow in one call of the browser tool. In the measurement at the end of this document the same test took 18 browser calls without one and 2 to 4 with one, at about half the input tokens and four fifths of the cost. It was also quicker, though on a small demo application only by a few seconds (30 to 34 seconds against 33 to 41). A longer sign-in and heavier pages should widen that; it was not measured. Once a card is verified, ask for it: "Add a Fast path to the login card and run it once." It is code that runs with the rights of the browser tool, so read it before you keep it. It needs a browser tool that can run a script; `kb/qa/driver.md` says whether yours can.
+2. **Expected results in `kb/app/test-data.md`.** A line such as "last name smith, created 10/01/2025 to 03/22/2026: 12 records" lets a session check one number. Without it the session first has to work out what the right answer is.
+3. **Defaults in `kb/app/environments.md`**: the environment to test in, the account, and where the password comes from. With those filled in, the `qa` skill has nothing to ask. It asks two questions at most, and only what these files leave open.
+4. **The report format.** `kb/qa/report-format.md` has two forms: five lines when every check passed, about twenty when one failed (a table of checks, the defect with its steps, what was not tested). Sessions keep to it, so change the forms there if you want less.
+5. **A browser that stays signed in**, where your rules allow one. Say so in `kb/qa/driver.md` and `kb/app/environments.md`, and sessions skip the sign-in. Not measured here.
 
-**Several applications.** One knowledge base per application keeps the always-loaded part small for people who work on one of them. Each needs its own folder, its own rule file, and its own names for the two skills (the folder and the `name` in each `SKILL.md`); the unpack snippet does not rename the skills.
+What did not help in the measurement: cards without a Fast path, and `effort: low` in the skill's front matter. On a small app a session explores about as fast as it reads cards; what the cards add there is the expected results, the checklist and the fixed report.
 
-## Files
+Two costs to expect. The first run of a flow that has no card is as slow as it is today, and ends by writing the card. And a run that learns something takes a few seconds longer, because it writes the note and checks it.
 
-Twenty-two files. Each block below is one file; the heading is its path in the repository.
+### Moving it
+
+**From one project to every project on your machine.** Three things move from the project to your profile folder. In PowerShell, from the project's root folder:
+
+```powershell
+$app  = 'YourApp'            # the application's name
+$mine = $false               # $true if the qa skill in this project is your own: it then stays where it is
+$check = @("$HOME\app-kb", "$HOME\.claude\rules\app-kb.md", "$HOME\.claude\skills\kb-capture")
+if (-not $mine) { $check += "$HOME\.claude\skills\qa" }
+$taken = @($check | Where-Object { Test-Path -LiteralPath $_ })
+if (-not (Test-Path -LiteralPath 'app-kb\KB.md')) {
+    Write-Warning 'Nothing was moved: there is no app-kb folder here. Run this in the project''s root folder.'
+} elseif ($taken.Count -gt 0) {
+    Write-Warning "Nothing was moved: your profile folder already has $($taken -join ', ')."
+} else {
+    New-Item -ItemType Directory -Force "$HOME\.claude\rules", "$HOME\.claude\skills" | Out-Null
+    Move-Item app-kb "$HOME\app-kb"
+    Move-Item .claude\skills\kb-capture "$HOME\.claude\skills\kb-capture"
+    if (-not $mine -and (Test-Path -LiteralPath '.claude\skills\qa')) { Move-Item .claude\skills\qa "$HOME\.claude\skills\qa" }
+    Remove-Item .claude\rules\app-kb.md
+    $kb = "$HOME\app-kb".Replace('\', '/')
+    New-Item -ItemType File -Path "$HOME\.claude\rules\app-kb.md" -Value "@../../app-kb/KB.md`nThe $app knowledge base is the folder $kb - use its full path to open its files, to search them and in shell commands.`n" | Out-Null
+    "moved: the knowledge base is now in $kb"
+}
+```
+
+Then add the folder to `permissions.additionalDirectories` in `~/.claude/settings.json`, so that sessions in other projects read it without asking. A session can do that for you: "Add the app-kb folder in my profile folder to additionalDirectories in my user settings."
+
+**To a repository the team shares.** The companion document, `claude-code-team-knowledge-base.md`, has the steps under "Coming from a local copy": your folder becomes the repository's first content, and nothing you wrote is lost.
+
+### Worth knowing
+
+- **Start `claude` in the folder the rule file belongs to.** Started in a subfolder of the project, Claude Code treats `app-kb` as outside its working folder and asks once whether to load it. Until you agree, the session knows where the folder is but not what is in it; if you decline, it does not ask again. Started in a folder above the project, nothing is loaded until the session reads a file inside the project.
+- **Why `app-kb` is not inside `.claude`.** Claude Code protects the `.claude` folder: in Manual mode every edit in it is asked about, and no setting can approve those edits in advance. Sessions write cards often, so the notes sit next to it instead.
+- **What is kept out of git is also skipped when Claude Code searches the project.** That is why the rule file tells sessions to search the notes through the folder's own path.
+- **An `AGENTS.md` written for another coding agent is left alone.** The rule file does not change whether Claude Code reads it. Claude Code reads `AGENTS.md` by itself when neither the project folder nor a folder above it has a `CLAUDE.md` or a `CLAUDE.local.md` (from version 2.1.277; some setups need 2.1.281). If your sessions do not seem to know what it says, create `CLAUDE.md` in the project root with the single line `@AGENTS.md`.
+- **Claude Code also keeps notes of its own** for each project, its auto memory. The knowledge base is the part you can read, correct, and later hand to someone else.
+- **What a session reads goes to the model**, the notes included. The rules in `KB.md` keep credentials and real data out of them; keep it that way.
+- **If you move or rename the folder**, correct both lines of the rule file.
+- **A machine with restricted PowerShell.** The setup script also runs where PowerShell is held to Constrained Language mode. The validator needs the full language: on such a machine it says that it cannot run, and sessions check their changes by hand.
+- **A machine your organization manages.** Managed settings can leave out personal and project instruction files, rule files among them, and can limit skills to those the organization provides. The notes are then not loaded by themselves; a session can still be told to read `app-kb/KB.md`.
+- **It is guidance.** Sessions follow these notes most of the time, not every time. The `KB:` line is there so that you can see when one did not.
+
+### Removing it
+
+Delete the `app-kb` folder, the file `.claude/rules/app-kb.md`, and the skill folders `kb-capture` and (if it is the one from this document) `qa` in `.claude/skills/`. For "every project", these are in your profile folder and in `~/.claude`, and the folder's entry in `permissions.additionalDirectories` can go as well. If a block was added to a QA skill of your own, take it out there. The lines the setup added to the project's `.git/info/exclude` do no harm if they stay.
+
+## Part 4 - The files
+
+19 files. Each block is one file; the heading is its path. The setup script reads them from here.
 
 ### File: `README.md`
 
@@ -493,8 +592,6 @@ One row per file. "Read when" names the task that should trigger the read. Paths
 | [dev/codebase.md](dev/codebase.md) | Finding your way: repositories, where things live, how to run and test locally |
 | [dev/gotchas.md](dev/gotchas.md) | A build, test or runtime problem that looks familiar; before spending long on a strange error |
 ````
-
-The workflow cards. `_TEMPLATE.md` is the shape; the other three are examples with invented values, marked `status: draft`, to be replaced by what your application really does.
 
 ### File: `kb/workflows/_TEMPLATE.md`
 
@@ -766,8 +863,6 @@ async (page) => {
 ```
 ````
 
-How testing is done. Fill in `driver.md` first: the cards and the `qa` skill both lean on it.
-
 ### File: `kb/qa/driver.md`
 
 ````markdown
@@ -951,8 +1046,6 @@ Behaviour that looks wrong and is intended. One line each, with the reason.
 - None recorded yet.
 ````
 
-What the application is, and what a developer needs.
-
 ### File: `kb/app/overview.md`
 
 ````markdown
@@ -1103,8 +1196,6 @@ One row per trap. Add a row when something cost real time; delete the row when t
 Example of a row, not a real one: `| Build fails with "port 5000 in use" | A debug session left the API running | Stop the process, or set another port in the launch settings | 2026-01-15 |`
 ````
 
-The two skills. Each is a folder with one `SKILL.md`.
-
 ### File: `.claude/skills/qa/SKILL.md`
 
 ````markdown
@@ -1238,8 +1329,6 @@ If PowerShell is missing, or the script says it cannot run on this machine, chec
 
 One or two lines, ending with the `KB:` line. It names the files changed and, for a shared repository, the branch and whether it was pushed; for a local copy the files are all it needs.
 ````
-
-The validator and the files for the git host.
 
 ### File: `scripts/validate-kb.ps1`
 
@@ -1654,83 +1743,19 @@ if ($script:errors -gt 0) { exit 1 }
 exit 0
 ````
 
-### File: `azure-pipelines.yml`
+## Checked
 
-````yaml
-# Validates the knowledge base: index coverage, links, front matter, secrets, sizes.
-#
-# Pull requests: Azure Repos ignores a `pr:` trigger in YAML. Attach this pipeline to pull
-# requests with a branch policy instead: Repos > Branches > main > Branch policies >
-# Build validation > add this pipeline (Trigger: Automatic, Policy requirement: Required).
-#
-# The script only reads files, needs no packages and makes no network calls.
+On 1 October 2026, with Claude Code 2.1.286 on Windows 11.
 
-trigger:
-  branches:
-    include:
-      - main
+**Tests.** 77 automated tests pass under Windows PowerShell 5.1 and PowerShell 7.6 on Windows 11, and under PowerShell 7.6 on macOS 26. Nineteen cover this document and its setup script: this project only and every project, with and without a QA skill of your own (also one that is itself named `qa`), with and without git, a worktree, a folder inside a repository, files that are to be committed, a second run, a project folder with square brackets in its name, a write that fails, a wrong scope or name, a document with Windows line endings and a byte-order mark, a document that lost its code blocks, PowerShell in Constrained Language mode, and the move from the project to the profile folder. The installed files are the files of Part 4 byte for byte, apart from the application's name. One test takes a local copy into a shared repository with the companion document's steps and checks that nothing written by hand is lost. Forty exercise the validator.
 
-pool:
-  vmImage: windows-latest   # self-hosted agents: replace these two lines with  pool: YourPoolName
+**Loading.** In a project set up this way, a new headless session answered "Which file tells you how to run an advanced search?" with the right card and without a tool call. Started in a subfolder of the project, it knew where the folder is but not what is in it: the case described under "Worth knowing". For the "every project" layout, a hook that logs each instruction file as Claude Code loads it showed the rule file, `KB.md` and the index loading when the session started.
 
-steps:
-  - checkout: self
-    fetchDepth: 1
+**Setup by a session.** Five headless sessions (model Sonnet 5.5) were each started in a fresh scratch project that had a QA skill of its own and an `AGENTS.md`, and were given the sentence from Part 1. Two got nothing else. They looked at the folder, asked the four questions in one message with the real folders named, and stopped. One of them was then answered "defaults": it wrote the setup script, ran it, deleted it and ran the validator (0 errors), and when it was given the facts for step 4 it filled in `environments.md` and `driver.md` and left what it was not told as TODO. The other three got the four answers together with the sentence, read only the lines it names, and installed and checked everything in one turn (17 to 28 seconds of model time); one of them ran in a folder with square brackets in its name. No session touched `AGENTS.md`. A session that gave the script a wrong path for this document got "Nothing was written" and tried again. The addition to the existing skill file, which is inside `.claude`, was refused in two runs because nobody was there to approve it (the session said so and left the block to paste) and went through in two.
 
-  # `powershell:` runs Windows PowerShell on Windows agents and pwsh on Linux and macOS agents.
-  # The script works in both.
-  - powershell: ./scripts/validate-kb.ps1
-    displayName: Validate knowledge base
-````
+Two of the five runs were made before the review described in the companion document and three after it, the last with the text and the script exactly as they are here. Not exercised: the option picker of an interactive session (a headless session has no question tool, so the questions came as text), and the "every project" choice, which was tested through the script and not through a session.
 
-### File: `.azuredevops/pull_request_template.md`
-
-````markdown
-## What this adds or corrects
-
-<!-- One or two lines. -->
-
-## How it was verified
-
-<!-- For example: "ran the card on test, build 4.12.0", or "read it in the code, pull request 1234". -->
-
-- [ ] Verified, not guessed. Cards that were run have today's date in `last_verified`
-- [ ] No passwords, tokens, keys or connection strings; no real personal or production data, also not in examples; no screenshots
-- [ ] Every new file has a row in `kb/index.md`
-- [ ] Nothing here repeats what another file already says
-- [ ] A new or changed Fast path was read like code: it runs with the rights of the browser tool
-- [ ] `scripts/validate-kb.ps1` reports no errors
-````
-
-### File: `.gitignore`
-
-````text
-# Evidence from test runs never belongs in the knowledge base:
-# screenshots and network captures can contain data and tokens.
-qa-runs/
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.webm
-*.har
-*.zip
-*.trace
-````
-
-## Verified
-
-On 1 October 2026.
-
-**Against the documentation.** The statements this template relies on were read in the Claude Code documentation (`code.claude.com/docs`: memory, skills, hooks, permissions, permission modes, settings) and the Azure DevOps documentation (`learn.microsoft.com`): rule files in `~/.claude/rules` load when a session starts and may import other files; imports resolve relative to the importing file, nest up to four levels, and load without an approval dialog when they are in the user's own folder; a skill folder in `~/.claude/skills/` may be a link and is picked up while a session runs; `permissions.additionalDirectories` gives file access and loads no skills; plain output of a `SessionStart` hook is added to the session's context; Azure Repos validates pull requests through a branch policy, not a YAML trigger; where pull request templates are found. Re-check if your Claude Code is much newer than 2.1.286.
-
-**Tests.** 77 tests pass on Windows 11 under both Windows PowerShell 5.1 and PowerShell 7.6, and on macOS 26 under PowerShell 7.6 (where the two Windows-only tests are skipped). Forty exercise the validator on a clean copy and on copies with one thing wrong each: a file missing from the index, a broken link, bad front matter, twenty-four shapes of credential, nineteen ordinary lines that must not be flagged, a password in a table, a folder typed in another letter case, a CRLF checkout, the pipeline output format, PowerShell in Constrained Language mode. Eight check the files themselves, among them the install steps that write the rule file and link the skills. Nine build this guide and unpack it with the snippet from step 2: the result is the template byte for byte, also when the guide has CRLF line endings and a byte-order mark and also in Constrained Language mode; a second run overwrites nothing; a missing folder, a missing guide, or a guide that has lost its code blocks gives a warning instead of silence. Nineteen do the same for the companion document's setup script, among them a project folder with square brackets in its name, a write that fails, a worktree, and a project that is a folder inside its repository. One takes a local copy through "Coming from a local copy" and checks that every file is there afterwards and that a card written by hand is still the person's own.
-
-**Wiring, with real sessions.** Claude Code 2.1.286 on Windows 11, headless sessions against a scratch copy checked out with CRLF line endings: a hook that logs each instruction file as it loads showed the rule file bringing in `KB.md` and the index when the session started; a skill linked by a directory junction was listed by a new session and picked up by one that was already running; the hook pulled a waiting commit and the model quoted git's summary of it; the model answered from the index without a tool call; with the folder in `additionalDirectories` a file in the knowledge base was read without a prompt, and without the entry the read was refused. On macOS the linked skill was listed and the hook pulled; the import and `additionalDirectories` were not checked there.
-
-**Independent reviews.** Twice, a second session that had not written the document was given the finished text and the saved documentation, checked the factual statements, ran the validator and the snippets, and read it as a newcomer. The first review found that the validator passed silently when its folder was typed in another letter case under PowerShell 7, that Git Bash's home folder is not always the profile folder, and that the credential check missed common shapes. The second, of both documents after they were split, found that the companion document's setup script installed into PowerShell's own program folder when Windows PowerShell 5.1 was started in a folder with a square bracket in its name; that the scripts reported success after failed writes; that keeping the files out of git also keeps them out of Claude Code's search of the project; that a QA skill of one's own that is itself named `qa` was mishandled; and that several statements about approval prompts held only in Manual mode. All of it is fixed here and covered by tests where a test can cover it.
-
-**Measurement.** A small demo web application was built for the purpose, with the frictions a line-of-business app has: sign-in in two steps, a terms notice to accept, the advanced search under a menu, dates typed as MM/DD/YYYY, results in pages of ten, a list that loads late, and one seeded defect (the end date of a range is treated as exclusive). The same request was given to headless sessions (model Sonnet 5.5, Playwright MCP 0.0.83, fresh browser profile): sign in, test an advanced search by last name and date range, report. Each number is one run:
+**Measurement.** A small demo web application was built for the purpose: sign-in in two steps, a notice to accept, the advanced search under a menu, dates typed as MM/DD/YYYY, results in pages of ten, and one seeded defect (the end date of a range is left out). Headless sessions (model Sonnet 5.5, Playwright MCP 0.0.83, a fresh browser profile) got the same request: sign in, test an advanced search by last name and date range, report. The knowledge base was installed by this document's own setup script. Each number is one run:
 
 | | No knowledge base (2 runs) | Cards, step tables only (2 runs) | Cards with Fast path (3 runs) |
 |---|---|---|---|
@@ -1741,17 +1766,12 @@ On 1 October 2026.
 | Cost at API prices, as the CLI reports it | $0.22, $0.23 | $0.25, $0.27 | $0.18, $0.19, $0.17 |
 | Wall time | 41 s, 36 s | 33 s, 39 s | 33 s, 30 s, 34 s |
 
-All seven runs found the defect. What differed:
+All seven runs found the defect. Without the knowledge base the session took six or seven page snapshots to find its way, and its report was free-form. With cards it took none: it read eight files in one step, compared the count with the expected value in the test data, and reported in the fixed format. With a Fast path, sign-in and search were one or two script calls. Three earlier batches on the same day, made before the last changes to the files, gave the same picture: with a Fast path, eight of nine runs took 25 to 30 seconds (the ninth stalled for a minute while the browser tool started); without one, eight runs took 34 to 46 seconds.
 
-- Without the knowledge base the session took six or seven page snapshots to find its way, and proved the missing record with a second search over another date range. Its report was free-form.
-- With cards the session took no snapshot at all: it read eight files in one step (driver, environments, two cards, test data, checklist, known issues, report format) and acted from them. It checked the count against the expected value in the test data, made the console check the checklist asks for, reported in the fixed format and said what it had done about the knowledge base. On this small app the cards alone made a run neither faster nor cheaper than exploring.
-- With a Fast path the session signed in and ran the search with one or two script calls. Against no knowledge base, input tokens fell by about half and cost by about a fifth, and a run was a few seconds shorter. Three earlier batches on the same day, made before the last changes to the files, gave the same picture: with a Fast path, eight of nine runs took 25 to 30 seconds (the ninth stalled for a minute while the browser tool started); without one, eight runs took 34 to 46 seconds.
-- Write-back into a shared repository (two runs, the knowledge base a clone with a remote, file edits and git allowed). Both times the session used `kb-capture` unasked: it looked at the status and the open branches, pulled, added the defect to `known-issues.md` on a new `kb/` branch, ran the validator, committed, switched back to `main`, did not push, and asked whether to. 37 and 42 seconds.
-- Write-back into a local copy (three runs, no `.git` folder). Each time the session used `kb-capture` unasked, wrote the row straight into the file, ran the validator and ended with the `KB:` line. 34 to 40 seconds.
-- Three runs with `effort: low` in the `qa` skill's front matter were no faster than three without, so the template does not set it.
+Three more runs were allowed to write. Each used `kb-capture` unasked, added the defect to `kb/qa/known-issues.md`, ran the validator and ended with the `KB:` line; they took 34 to 40 seconds. In the earlier batches some sessions left the validator out, until the skill said in so many words which of its sections apply to a local copy.
 
-Five things these measurements changed in the files. One report repeated the password it had been given in the request, so the report format forbids that. Two of six sessions left out the console check until the skill said in so many words that every check of the chosen depth is to be run. The report of a failed run came out about forty lines long; the format now has a fixed form of about twenty. A line for notes that was open to anything filled up with remarks; it is now limited to four named cases. And local write-backs skipped the validator until the skill named the sections that apply to a local copy.
+Three runs with `effort: low` in the `qa` skill's front matter were no faster than three without, so the template does not set it.
 
-Read the numbers for what they are: one small app, one request, one model, two or three runs. A real application has larger pages, more steps and stricter sign-in, which makes exploring cost more and a card worth more; this was not measured.
+Read the numbers for what they are: one small app, one request, one model, two or three runs. A real application has larger pages, more steps and stricter sign-in, which makes exploring cost more and a card worth more. That was not measured.
 
-**Not tested.** The Azure pipeline file was written from the documentation and not run. The install commands for Linux were not run. How well sessions keep up the give-back over months is unknown.
+**Not checked.** The by-hand steps on macOS and Linux, beyond the script itself. A machine whose home drive is on the network. How well sessions keep the notes current over months.
