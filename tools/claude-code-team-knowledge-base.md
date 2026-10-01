@@ -178,7 +178,7 @@ Worth knowing:
 
 ## What it cannot do
 
-- **It is guidance, not enforcement.** Claude Code treats instruction files as context. In the test runs below every session used the skill, the report format and the `KB:` line, yet two of six left out a check the checklist asks for. Expect the same in daily use: most of it followed, not all of it every time. If the give-back step is what gets skipped, see "Enforcing the give-back" below.
+- **It is guidance, not enforcement.** Claude Code treats instruction files as context. In the test runs below every session used the skill, the report format and the `KB:` line, but in an earlier round two of six left out a check until the skill spelled it out. Expect the same in daily use: most of it followed, not all of it every time. If the give-back step is what gets skipped, see "Enforcing the give-back" below.
 - **The index is read when the session starts.** A row added by the pull of the same session start may be missing from it. `KB.md` tells sessions to read the index again when the pull summary lists it.
 - **Cards drift.** A card is right on the day it was verified. A failed "Expect" is how drift shows; the validator only reports age.
 - **A correction is invisible until it is merged.** It sits on a local branch, then in a pull request. The `kb-capture` skill lists branches that were never merged each time it runs, so they are not forgotten.
@@ -858,6 +858,7 @@ Rules:
 
 - Lead with the verdict. BLOCKED means the test could not be run (environment down, no account, sign-in failed); say what is needed.
 - A pass without evidence is not a pass.
+- Never repeat a password or a token in the report, even one that was given in the request. Name the account instead.
 - The "Knowledge base" section is never left out. It is how the team sees whether the cards still match the app.
 ````
 
@@ -1076,6 +1077,7 @@ Tell the developer in a few lines: the environment and account; the cards you wi
 - **An "Expect" that does not hold:** stop following the card and look at the page once. Decide which it is - the app is wrong (a finding) or the card is out of date (drift) - then continue from what you see, and note which.
 - **A part without a card:** explore it deliberately, and write down each action, locator and wait as you go. Those notes become the new card.
 - **A card marked draft or stale:** follow it, and confirm each step as you go.
+- **The checklist:** run every check of the chosen depth. One you leave out goes under "Not tested" with the reason.
 - **Evidence:** keep what `driver.md` asks for, for every check. Evidence files go where it says, never into the knowledge base.
 - Before calling something a defect, look for it in `known-issues.md`.
 
@@ -1655,20 +1657,22 @@ On 1 October 2026.
 
 | | No knowledge base | Cards (step tables) | Cards with Fast path |
 |---|---|---|---|
-| Browser calls | 23 | 18 | 3 |
+| Browser calls | 23 | 18 | 4 |
 | - of which page snapshots | 6 | 0 | 0 |
 | Knowledge base files read | 0 | 8 | 8 |
 | All tool calls | 24 | 28 | 13 |
-| Input tokens, cached ones included | 607,000 | 647,000 | 236,000 |
-| Cost at API prices, as the CLI reports it | $0.24 | $0.29 | $0.18 |
-| Wall time | 35 s | 45 s | 32 s |
+| Input tokens, cached ones included | 607,000 | 697,000 | 239,000 |
+| Cost at API prices, as the CLI reports it | $0.24 | $0.30 | $0.18 |
+| Wall time | 35 s | 46 s | 36 s |
 
 All nine runs found the defect. What differed:
 
 - Without the knowledge base every run took six page snapshots to find its way, and proved the missing record with a second search over another date range. Its report was free-form.
-- With cards the session took no snapshot at all: it read eight files (driver, environments, two cards, test data, checklist, known issues, report format) and acted from them. It checked the count against the expected value in the test data, reported in the fixed format and said what it had done about the knowledge base. Four of the six sessions that had the knowledge base also made the console check the checklist asks for; two left it out. On this small app the cards alone cost a little more than exploring did.
-- With a Fast path the session signed in and ran the search with one script call in two runs and two in the third, plus a call or two for the console and for closing the browser. Input tokens fell by 61 percent and cost by 23 percent against no knowledge base.
+- With cards the session took no snapshot at all: it read eight files (driver, environments, two cards, test data, checklist, known issues, report format) and acted from them. It checked the count against the expected value in the test data, made the console check the checklist asks for, reported in the fixed format and said what it had done about the knowledge base. On this small app the cards alone cost about a quarter more than exploring did.
+- With a Fast path the session signed in and ran the search with one or two script calls, plus the console check and closing the browser. Input tokens fell by 61 percent and cost by 23 percent against no knowledge base.
 - In a fourth setup (two runs) the session was allowed to write. Both times it used `kb-capture` unasked: it listed the open branches, added the defect to `known-issues.md` on a new local branch, ran the validator, committed, switched back to `main`, did not push, and asked whether to.
+
+Two things the earlier rounds of this measurement changed in the files. One report repeated the password it had been given in the request, so the report format now forbids that. And two of six sessions left out the console check until the skill said in so many words that every check of the chosen depth is to be run.
 
 Read the numbers for what they are: one small app, one request, one model. A real application has larger pages, more steps and stricter sign-in, which makes exploring cost more and a card worth more; this was not measured.
 
