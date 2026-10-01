@@ -35,6 +35,7 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 | [tools/codex-agents-template.md](tools/codex-agents-template.md) | Reusable AGENTS.md template for Codex CLI — reasoning, workflow, communication, git safety, code quality |
 | [tools/goose.md](tools/goose.md) | Goose AI agent config — locations, format, env var precedence, remote Ollama setup, tool shim for weak tool-calling models |
 | [tools/claude-code-action-guard.md](tools/claude-code-action-guard.md) | Template: a Claude Code `PreToolUse` hook that refuses or asks about actions against one web application — hook contract (stdin JSON, deny/ask JSON out, fail open), a shell reader for curl/wget/httpie/PowerShell request methods, path rules, Claude in Chrome tab memory, MCP tool rules; full source, installer and 22 tests in code blocks with setup and adaptation notes |
+| [tools/claude-code-team-knowledge-base.md](tools/claude-code-team-knowledge-base.md) | Template: a team knowledge base that Claude Code sessions load when they start — one `@import` line pulls in an entry file and an index; UI workflow cards (steps, locators, an expected result per step, optional one-call script) for ad-hoc QA; `qa` and `kb-capture` skills; a PowerShell validator for pull requests; Azure DevOps pipeline and pull request template; all 22 files in code blocks with an unpack snippet, setup and install steps, and a measured comparison with and without the cards |
 
 ## See also
 
