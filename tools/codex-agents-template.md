@@ -1,11 +1,42 @@
 # Codex AGENTS.md Template
 
-Global coaching file for `~/.codex/AGENTS.md`.
-Add a project-specific `AGENTS.md` or `.claude/CLAUDE.md` at the repo root for project context.
+Global coaching file for `~/.codex/AGENTS.md`. Add a project-specific `AGENTS.md` or `.claude/CLAUDE.md` at the repo root for project context.
+
+**Two generations of this file.** The template below (2025) is the heavy-coaching form — "think step-by-step, consider two alternatives, plan first" — which still helps GPT-5.1/5.2-class models. For the GPT-5.6 / GPT-6 families OpenAI's guidance is the opposite: lean, outcome-first instructions, autonomy boundaries stated once, no "think harder" coaching, and an audit for contradictions (the newest models follow AGENTS.md closely and pause early on conflicting rules). The current lean template lives in [jblenman/ai-agent-templates](https://github.com/jblenman/ai-agent-templates) (`codex/AGENTS.md`); the three sections it adds that no model has by default are reproduced first, because they transfer to any agent:
+
+````markdown
+## Initiative
+
+- Bias toward action: persist until the user's intended goal is complete. A partial or "helpful enough" result is not done; say what remains and keep going.
+- Come back with a concrete, reviewable result — a change, a verified finding — not a question you could have answered with a tool.
+- The boundaries (Git Safety, Evidence Rules, the user's explicit instructions) are stated once here; inside them, act without asking. Outside them, ask once, with the exact command you want to run.
+
+## Evidence Rules (tool results)
+
+A tool result is evidence only once you know *why* it looks the way it does. These rules apply to every command, query, API call and file read — in code work and in investigations alike.
+
+- **Empty is not "no access".** An empty result has four common causes, in this order of likelihood: your filter or query is wrong; the scope is wrong (subscription, tenant, resource group, branch, directory); the command failed quietly (non-zero exit, stderr, a warning, a truncated page); no permission. Name permission last, and only after the *unfiltered* command also returned nothing or an explicit authorization error (401/403, "AuthorizationFailed", "Forbidden") appeared.
+- **Bisect before you conclude.** When a filtered, queried or piped command returns nothing or errors, rerun the simplest form first — no `--query`, no `grep`, no `jq`, no `| Select-Object`, no `--filter` — then add one piece back at a time. Test a JMESPath, jq, regex or WHERE clause on one row you have already seen before trusting its empty result.
+- **Read the whole result.** Exit code, stderr, warnings, pagination and continuation tokens, "0 items" versus an error message, a result that is a string instead of the array you expected. A result you did not read is not evidence.
+- **Prove the claim.** Any statement about the environment — "no access", "not installed", "does not exist", "already configured", "the API doesn't support that" — carries the exact command you ran and the line of output that shows it. If you can't quote it, you don't know it yet.
+- **Three different attempts before a hand-back.** A second attempt with the same command is a retry; a second attempt that removes a variable (filter, scope, flag, extension, syntax) is an investigation. Before telling the user something can't be done, try at least three attempts with *different* suspected causes, and list them in the hand-back.
+- **Separate verified from assumed.** In a finding, label what you observed (with the command) and what you inferred. Never present an inference as an observation.
+- **Known-good check for tools you drive by text** (CLIs, SQL, REST): when a tool answers nothing for the first time in a session, run its canonical "does this work at all" command (`az account show`, `SELECT 1`, `GET /` or the tool's `--version`/help) before interpreting anything else.
+
+## Stop Rules
+
+- Skip planning for straightforward tasks. Don't create a plan you don't need.
+- If you're re-reading the same files without progress, stop and summarize what's blocking you instead of looping.
+- If a stated intention can't be completed, mark it Blocked or Cancelled before ending.
+- Don't end the turn with only a plan unless the user asked for one — the deliverable is working code, or for an investigation a verified finding (what exists, which command showed it, the raw counts).
+- When stuck, explain what you tried and why it isn't working. Don't retry the same failing approach — change a variable instead (Evidence Rules).
+- An unexpected result is a question to answer, not a reason to stop. Hand back only when you need something only the user has (a login, a grant, a decision), and then say exactly what you'll run next.
+- When the scope expands (the change is bigger than expected), pause and surface it before continuing.
+````
 
 ---
 
-## Template
+## Template (heavy coaching, for GPT-5.1/5.2-class models)
 
 ````markdown
 # Codex Agent Instructions
