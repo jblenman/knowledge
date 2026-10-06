@@ -69,6 +69,12 @@ Observed with a Luna-tier model on an Azure CLI task: `az … --query "<malforme
 
 A complete AGENTS.md with these sections, plus the `azure-cli` skill that encodes the Azure specifics (JMESPath strings must be single-quoted; double quotes inside a filter return empty output — Microsoft's own words; `datafactory` and `resource-graph` are extensions, `synapse` is core), is in [jblenman/ai-agent-templates](https://github.com/jblenman/ai-agent-templates).
 
+## Cost and effort
+
+Cost per step ≈ (context size × input price) + ((output + reasoning) × output price); every step re-sends the whole context, so past ~50–100K tokens the input term dominates and the effort setting is not the lever — context size is. List prices per 1M (OpenAI model pages, Oct 2026; Azure can differ): GPT-6.1 Sol $2 / $0.10 cached / $10; GPT-5.6 Sol $4 / $0.40 / $20 (promotional through at least Nov 21 2026); GPT-5.6 Terra $2 input; GPT-5.6 Luna $0.20 / $0.02 / $1.20. Prompts above 272K input tokens bill at 2× input / 1.5× output for the whole request on all of them — keep `model_auto_compact_token_limit = 270000`.
+
+`model_reasoning_effort` is a ceiling on reasoning tokens, not a rate: the "N×" figures in warnings are averages over mixed evals; the multiple is real only on open-ended work. Measure your own with `codex exec --json` (reports reasoning tokens) at `medium` vs `high`. Decide per step by the cost of being wrong: a Luna-tier model at `medium` for closed, checkable tasks (format, extract, summarize, a script from a clear spec, a known procedure); Terra/Sol at `medium` for implementing a decided design; `high` when the model must decide what to look at next (investigations, comparisons, ≥3 interacting constraints); `xhigh` for one-off decisions that are expensive to detect as wrong. Bump up on a confident-but-unverifiable conclusion, an early hand-back or a retry loop; bump down when the work turns mechanical (`Alt+.` / `Alt+,`). The biggest savings are structural: one session per question with findings in the notes file, small tool outputs (`tool_output_token_limit` ~16000 for data work), the small model pre-digesting for the capable one, `multi_agent` only when the parallelism pays. The full rubric is in the templates repository's Codex guide.
+
 ## Hooks (stable; the same contract as Claude Code's)
 
 `features.hooks = true`, then `~/.codex/hooks.json` (or inline `[hooks]` in `config.toml`; one representation per layer; a repo's `.codex/hooks.json` loads only in trusted projects).
