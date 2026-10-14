@@ -24,13 +24,14 @@ Cheap "512 GB / 1 TB / 2 TB" sticks from marketplaces are very often 8–64 GB o
 - USB `048d:1234` → usb.ids "Chipsbank CBM2199 Flash Drive"; SCSI inquiry `VendorCo` / `Disk 3.0` / rev `2.00` — placeholder strings left by the controller's mass-production tool (`VendorCo ProductCode` is the textbook fake-drive device name).
 - Enumerates as USB 2.0 high-speed (480 Mb/s) with "3.0" in the name; ~18 MB/s write, ~26 MB/s read.
 - Reported size exactly 2,048,000,000 sectors (1,048,576,000,000 bytes).
+- **Observed 2026-10-14:** this very stick passed an 11-point spot test (an earlier offset set, 1/16/40/64/100/200/300/500/700/900/975 GiB, which only collides for wrap sizes ≤ 32 GiB) and took a 9.5 GB raw image at ~10 MB/s (`dd bs=4m`; a 1 GiB file written through FAT32 had measured 18 MB/s). So the signature alone is not a verdict — it may be a slow but genuine 1 TB. F3 over the whole volume is still the only proof.
 - None of this is proof: **test before trusting it** (below). Sources: [datarecovery.com — The 2TB flash drive scam](https://datarecovery.com/2022/03/the-2tb-flash-drive-scam-why-high-capacity-flash-drives-are-fakes/) (fake 2 TB sticks built on Chipsbank CBM2199E with 8–32 GB of NAND), [HD Sentinel — detect a fake pendrive](https://www.hdsentinel.com/how_to_detect_fake_pendrive_memory_card.php), [linux-usb usb.ids](http://www.linux-usb.org/usb.ids).
 
 ## Test the real capacity
 
 | Method | Needs | Time on a USB 2.0 stick | What it tells |
 |---|---|---|---|
-| **Raw spot test**: write an 8 MiB random block at 1, 16, 40, 64, 100, 200, 300, 500, 700, 900 and 975 GiB (`dd if=pat of=/dev/rdiskN bs=1m seek=<MiB> count=8`), read each back from `/dev/rdiskN` (raw = uncached, no re-plug needed), `cmp` | sudo; destroys the contents | ~3 min | a FAIL past some offset bounds the real size; an early offset failing after later writes = wrap-around |
+| **Raw spot test** (`utilities/usb-spot-test/usb_spot_test.py`): an 8 MiB random block at 1 GiB, at 2^k + 1 GiB (9 … 513) and 1 GiB below the end, every block read back after all the writes | sudo; destroys nine blocks | ~1 min | a wrap-around at any power-of-two size 8–512 GiB lands on the 1 GiB block and the tool names the offset it now holds; dropped writes fail at the first offset past the real end; a pass is evidence up to the top offset, not proof |
 | **F3** (`brew install f3`, v10): `f3write /Volumes/X` fills the free space with 1 GiB files, `f3read /Volumes/X` verifies them; `--end-at=N` stages it | no sudo; the volume must span the whole disk, so reformat first | the first 64 GiB ≈ 1.8 h; a full 1 TB ≈ 27 h at 18 / 26 MB/s | the real usable size |
 | `f3probe` | Linux only (probes the raw device) | minutes | — |
 
