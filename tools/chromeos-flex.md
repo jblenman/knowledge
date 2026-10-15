@@ -30,4 +30,21 @@ Boot keys: F12 Dell and Lenovo, F9 HP, F2 Acer and Intel, Del Asus, F2 or F12 To
 - **USB adapters confirmed plug-and-play on Flex** by the USB-WiFi maintainer (Sep 2023, [morrownr/USB-WiFi#303](https://github.com/morrownr/USB-WiFi/issues/303)): MediaTek **mt7612u** (dual band AC1200, e.g. Alfa AWUS036ACM, ~$43), **mt7610u** (dual band AC600, e.g. Alfa AWUS036ACHM, ~$50, long range) and **mt7601u** (2.4 GHz N150, ~$5–8, e.g. EDUP MS8551); products and prices from his [in-kernel adapter list](https://github.com/morrownr/USB-WiFi/blob/main/home/USB_WiFi_Adapters_that_are_supported_with_Linux_in-kernel_drivers.md).
 - iPhone **USB** tethering: ChromeOS gained kernel support in 2019 per the news of the time; not re-confirmed against current docs — a one-minute try (Personal Hotspot on, cable, tap Trust) costs nothing. The iPhone's Wi-Fi hotspot needs a working Wi-Fi adapter, so it does not help here.
 
+## What the Flex image actually ships for USB Wi-Fi (read from the image, 2026-10-14)
+
+Flex stable 16765.51.0 = kernel **6.12.91** (modules dated 2026-09-20). Read without booting it: carve ROOT-A out of the `.bin` with `dd` (GPT entry 3; offset 423,624,704, 2,516,582,400 bytes) and query it with `debugfs` from Homebrew `e2fsprogs` (`debugfs -R "cat /lib/modules/<ver>/modules.alias" rootfs-a.img`); the alias table maps every USB vendor:product ID to its driver, and `modules.builtin` showed no wireless driver built in.
+
+| Driver module | Chips | USB IDs in the table (examples) | Adapters |
+|---|---|---|---|
+| `mt76x2u` | MediaTek mt7612u | 0e8d:7612, **0846:9053 (Netgear A6210)**, 0b05:17eb / 180b / 1833 (ASUS), 2357:0137 | Alfa AWUS036ACM, Netgear A6210 |
+| `mt76x0u` | MediaTek mt7610u | 0e8d:7610, 2357:0105 (TP-Link Archer T1U), 2357:010b (Archer T2U v1), 0b05:17d1 (ASUS USB-AC51), 7392:a711/b711/c711 (Edimax) | Alfa AWUS036ACHM |
+| `mt7601u` | MediaTek mt7601u | 148f:7601 and 16 more | EDUP MS8551, cheap N150 "7601" sticks |
+| `rt2800usb` | Ralink RT3070/5370/5372/5572 | 148f:5370, 5372, 5572, 3070…; 0846:9012/9013/9019 (Netgear) | Panda PAU05/PAU06/PAU09 |
+| `ath9k_htc` | Atheros AR9271/AR7010 | 0cf3:9271, 0846:9030 (Netgear WNA1100) | Alfa AWUS036NHA, TL-WN722N **v1** |
+| `rtl8xxxu` | Realtek RTL8188EU/8192EU/8723BU/8188CU… | 0bda:8179, 0bda:818b, 0bda:f179, 0bda:b720, **2357:010c (TL-WN722N v2–v4), 2357:0108 (TL-WN822N), 2357:0109 (TL-WN823N), 2357:0111**, 7392:b811 (Edimax EW-7811Un V2), 0b05:18f0 (ASUS USB-N13 C1) | the common $10–15 N150/N300 sticks |
+| `rtl8192cu` | Realtek RTL8188CU/8192CU | 0bda:8176, 0bda:8178 | Edimax EW-7811Un v1 |
+| `rtw88_usb` + `rtw88_8723du` | Realtek RTL8723DU only | 0bda:d723, 7392:d611 | — |
+
+**Not shipped:** `mt7921u` (only `mt7921e`, the PCIe variant) — so every mt7921au / Wi-Fi 6 USB adapter (Netgear A8000 0846:9060, Netgear A7500 0846:9065, Panda PAU0F 0e8d:7961, BrosTrend AX9L, Alfa AXML) is dead on Flex even though their firmware files are present; no `rtw88_8822bu` / `8821cu` / `8812au` (Archer T3U 2357:0138 and T2U/T3U/T4U families), no `rtw89` USB. Check a candidate by its USB ID against the table before buying.
+
 Sources: Google Flex help — [Create the USB installer](https://support.google.com/chromeosflex/answer/11541904), [Boot device using the USB installer](https://support.google.com/chromeosflex/answer/11552352), [Known issues](https://support.google.com/chromeosflex/answer/11541806), [Troubleshoot installation failures](https://support.google.com/chromeosflex/answer/11542398); the mirror shortcut: [FCIT helpdesk](https://fcit.freshservice.com/support/solutions/articles/4000049180).
