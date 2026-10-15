@@ -45,6 +45,8 @@ Flex stable 16765.51.0 = kernel **6.12.91** (modules dated 2026-09-20). Read wit
 | `rtl8192cu` | Realtek RTL8188CU/8192CU | 0bda:8176, 0bda:8178 | Edimax EW-7811Un v1 |
 | `rtw88_usb` + `rtw88_8723du` | Realtek RTL8723DU only | 0bda:d723, 7392:d611 | — |
 
+- **Cheapest widely stocked match (per the table, not yet tested on Flex):** TP-Link TL-WN725N nano (v2/v3 = RTL8188EUS, USB 0bda:8179 → `rtl8xxxu`; v1 = RTL8188CUS 0bda:8176 → `rtl8192cu`), ~$10, 2.4 GHz N150; its siblings TL-WN722N v2+ (2357:010c), TL-WN822N (2357:0108) and TL-WN823N (2357:0109) likewise. Sources: [techinfodepot TL-WN725N v2](https://techinfodepot.shoutwiki.com/wiki/TP-LINK_TL-WN725N_v2), [OpenWrt forum, v3](https://forum.openwrt.org/t/tp-link-tl-wn725n-v3/53305).
+
 **Not shipped:** `mt7921u` (only `mt7921e`, the PCIe variant) — so every mt7921au / Wi-Fi 6 USB adapter (Netgear A8000 0846:9060, Netgear A7500 0846:9065, Panda PAU0F 0e8d:7961, BrosTrend AX9L, Alfa AXML) is dead on Flex even though their firmware files are present; no `rtw88_8822bu` / `8821cu` / `8812au` (Archer T3U 2357:0138 and T2U/T3U/T4U families), no `rtw89` USB. Check a candidate by its USB ID against the table before buying.
 
 Sources: Google Flex help — [Create the USB installer](https://support.google.com/chromeosflex/answer/11541904), [Boot device using the USB installer](https://support.google.com/chromeosflex/answer/11552352), [Known issues](https://support.google.com/chromeosflex/answer/11541806), [Troubleshoot installation failures](https://support.google.com/chromeosflex/answer/11542398); the mirror shortcut: [FCIT helpdesk](https://fcit.freshservice.com/support/solutions/articles/4000049180).
