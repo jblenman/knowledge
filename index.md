@@ -27,6 +27,7 @@ This corpus is indexable and queryable with [local-rag](https://github.com/jblen
 | [patterns/heap-snapshot-streaming-analysis.md](patterns/heap-snapshot-streaming-analysis.md) | Streaming Chrome heap-snapshot analysis for multi-GB captures that DevTools can't reload: `ijson` + pre-allocated `array.array`, two-pass strings + nodes, ~300 MB peak memory, sanitization technique; public gist with the scripts |
 | [patterns/oss-maintainer-bug-reports.md](patterns/oss-maintainer-bug-reports.md) | Writing upstream bug reports that land: addressing prior pushback, crediting other reporters, evidence-before-conclusion framing, leading suggested fixes with the codebase's existing patterns, conditional PR offers, honest AI-assistance acknowledgment, not pre-judging maintainer's costs |
 | [patterns/3d-printing.md](patterns/3d-printing.md) | STL diagnostic decision tree, dual-silhouette / shadow-art models (don't "repair"), trimesh mesh-stats snippet, how STL repair tools actually work, splint-repair strategy for MDF parts, captive-grommet sandwich pattern, structural PETG print settings, reusable OpenSCAD modules |
+| [patterns/publishing-a-private-project.md](patterns/publishing-a-private-project.md) | Turning a private working repo into a public project: per-user config directory instead of a sanitized copy, grep/history/verification gates, archive-rename + orphan-commit publish |
 
 ## Tools
 
